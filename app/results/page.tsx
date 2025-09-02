@@ -1,5 +1,5 @@
 
-import { ResultsClient } from '@/components/results-client';
+import ResultsClient from '@/components/results-client';
 import { AppHeader } from '@/components/app-header';
 
 export default function ResultsPage() {

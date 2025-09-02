@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserForm } from '@/components/user-form';
+import UserForm from '@/components/user-form';
 import { MapPin, Users, TrendingUp, Globe, Brain, DollarSign, Target, Heart } from 'lucide-react';
 
 export default function HomePage() {
