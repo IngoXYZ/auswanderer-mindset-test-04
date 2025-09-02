@@ -29,11 +29,14 @@ export async function sendQuizResults(submission: QuizSubmission): Promise<boole
       total_score: submission.totalScore,
       max_score: submission.maxScore,
       result_type: submission.resultType,
-      adaptability_score: submission.categoryScores.adaptability?.toFixed(1) || 'N/A',
-      risk_tolerance_score: submission.categoryScores.riskTolerance?.toFixed(1) || 'N/A',
-      financial_situation_score: submission.categoryScores.financialSituation?.toFixed(1) || 'N/A',
-      values_compass_score: submission.categoryScores.valuesCompass?.toFixed(1) || 'N/A',
-      security_needs_score: submission.categoryScores.securityNeeds?.toFixed(1) || 'N/A',
+      veraenderungsbereitschaft_score: submission.categoryScores.veraenderungsbereitschaft?.toFixed(1) || 'N/A',
+      anpassungsfaehigkeit_score: submission.categoryScores.anpassungsfaehigkeit?.toFixed(1) || 'N/A',
+      risikobereitschaft_score: submission.categoryScores.risikobereitschaft?.toFixed(1) || 'N/A',
+      finanzielle_situation_score: submission.categoryScores.finanzielle_situation?.toFixed(1) || 'N/A',
+      wertekompass_score: submission.categoryScores.wertekompass?.toFixed(1) || 'N/A',
+      sicherheitsbeduerfnis_score: submission.categoryScores.sicherheitsbeduerfnis?.toFixed(1) || 'N/A',
+      growth_vs_komfort_score: submission.categoryScores.growth_vs_komfort?.toFixed(1) || 'N/A',
+      konformitaet_vs_rebell_score: submission.categoryScores.konformitaet_vs_rebell?.toFixed(1) || 'N/A',
       recommendations: submission.recommendations.join('\n• '),
       submission_date: submission.timestamp,
       message: `
@@ -48,11 +51,14 @@ Gesamtpunktzahl: ${submission.totalScore}/${submission.maxScore}
 Auswanderer-Typ: ${submission.resultType}
 
 KATEGORIE-AUSWERTUNG:
-• Anpassungsfähigkeit: ${submission.categoryScores.adaptability?.toFixed(1) || 'N/A'}/5
-• Risikobereitschaft: ${submission.categoryScores.riskTolerance?.toFixed(1) || 'N/A'}/5  
-• Finanzielle Situation: ${submission.categoryScores.financialSituation?.toFixed(1) || 'N/A'}/5
-• Wertekompass: ${submission.categoryScores.valuesCompass?.toFixed(1) || 'N/A'}/5
-• Sicherheitsbedürfnis: ${submission.categoryScores.securityNeeds?.toFixed(1) || 'N/A'}/5
+• Veränderungsbereitschaft: ${submission.categoryScores.veraenderungsbereitschaft?.toFixed(1) || 'N/A'}/5
+• Anpassungsfähigkeit: ${submission.categoryScores.anpassungsfaehigkeit?.toFixed(1) || 'N/A'}/5
+• Risikobereitschaft: ${submission.categoryScores.risikobereitschaft?.toFixed(1) || 'N/A'}/5  
+• Growth vs. Komfort: ${submission.categoryScores.growth_vs_komfort?.toFixed(1) || 'N/A'}/5
+• Konformität vs. Rebell: ${submission.categoryScores.konformitaet_vs_rebell?.toFixed(1) || 'N/A'}/5
+• Finanzielle Situation: ${submission.categoryScores.finanzielle_situation?.toFixed(1) || 'N/A'}/5
+• Wertekompass: ${submission.categoryScores.wertekompass?.toFixed(1) || 'N/A'}/5
+• Sicherheitsbedürfnis: ${submission.categoryScores.sicherheitsbeduerfnis?.toFixed(1) || 'N/A'}/5
 
 EMPFEHLUNGEN:
 • ${submission.recommendations.join('\n• ')}

@@ -28,11 +28,14 @@ export const EMAILJS_CONFIG = {
 // Auswanderer-Typ: {{result_type}}
 //
 // KATEGORIE-SCORES:
-// • Anpassungsfähigkeit: {{adaptability_score}}/5
-// • Risikobereitschaft: {{risk_tolerance_score}}/5
-// • Finanzielle Situation: {{financial_situation_score}}/5
-// • Wertekompass: {{values_compass_score}}/5
-// • Sicherheitsbedürfnis: {{security_needs_score}}/5
+// • Veränderungsbereitschaft: {{veraenderungsbereitschaft_score}}/5
+// • Anpassungsfähigkeit: {{anpassungsfaehigkeit_score}}/5
+// • Risikobereitschaft: {{risikobereitschaft_score}}/5
+// • Growth vs. Komfort: {{growth_vs_komfort_score}}/5
+// • Konformität vs. Rebell: {{konformitaet_vs_rebell_score}}/5
+// • Finanzielle Situation: {{finanzielle_situation_score}}/5
+// • Wertekompass: {{wertekompass_score}}/5
+// • Sicherheitsbedürfnis: {{sicherheitsbeduerfnis_score}}/5
 //
 // EMPFEHLUNGEN:
 // {{recommendations}}
