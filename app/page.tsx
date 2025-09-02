@@ -6,41 +6,21 @@ import { MapPin, Users, TrendingUp, Globe, Brain, DollarSign, Target, Heart } fr
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-black tracking-tight">THE SMALL RESET</h1>
-              <p className="text-sm text-gray-600 mt-1 tracking-widest">Release. Rediscover. Rise.</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section with Earth Background Inspiration */}
-      <section className="relative py-20 px-4 tsr-hero-bg">
+      {/* Hero Section */}
+      <section className="relative py-20 px-4">
         <div className="max-w-5xl mx-auto text-center">
-          {/* The Small Reset Logo */}
           <div className="mb-8">
-            <img 
-              src="/the-small-reset-logo.png" 
-              alt="The Small Reset Logo" 
-              className="w-96 h-auto mx-auto mb-6"
-            />
-            <h2 className="text-4xl md:text-6xl font-bold text-black mb-6 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold text-black mb-6 leading-tight">
               <span className="bg-gradient-to-r from-blue-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
                 Auswanderer Mindset Test
               </span>
-            </h2>
+            </h1>
             <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
               Finde in nur 5 Minuten heraus, wie gut du mental und emotional auf eine Auswanderung vorbereitet bist.
-              <br className="hidden md:block" />
-              Release your limitations. Rediscover your potential. Rise to new horizons.
             </p>
           </div>
 
-          {/* Stats in The Small Reset Style */}
+          {/* Stats Section */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
               <div className="text-3xl font-bold text-black mb-2">15</div>
@@ -133,18 +113,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-black text-white py-12">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="mb-4">
-            <h3 className="text-2xl font-bold mb-2">THE SMALL RESET</h3>
-            <p className="text-gray-300 text-sm tracking-widest">Release. Rediscover. Rise.</p>
-          </div>
-          <p className="text-gray-400">
-            © 2025 The Small Reset. Dein Weg ins Ausland beginnt hier.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

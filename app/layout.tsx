@@ -8,8 +8,8 @@ import { Toaster } from "sonner"
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'The Small Reset - Auswanderer-Mindset Test',
-  description: 'Release. Rediscover. Rise. - Finde in nur 15 Minuten heraus, wie gut du mental und emotional auf eine Auswanderung vorbereitet bist. Von The Small Reset.',
+  title: 'Auswanderer-Mindset Test',
+  description: 'Finde in nur 5 Minuten heraus, wie gut du mental und emotional auf eine Auswanderung vorbereitet bist. Kostenloser Test mit detaillierter Auswertung und persönlichen Empfehlungen.',
 }
 
 export default function RootLayout({
