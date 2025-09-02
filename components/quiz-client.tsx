@@ -1,185 +1,230 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { questions, getResultType, getRecommendations } from '@/lib/questions';
+import { saveQuizSession, getUserSession } from '@/lib/local-storage';
+import { sendQuizResults } from '@/lib/emailjs-service';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Question } from '@/lib/questions';
-import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
-interface QuizClientProps {
-  questions: Question[];
-}
-
-export function QuizClient({ questions }: QuizClientProps) {
+export default function QuizClient() {
+  const router = useRouter();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+  const [userSession, setUserSession] = useState<any>(null);
 
   useEffect(() => {
-    // Check if user data exists
-    const userId = sessionStorage.getItem('userId');
-    if (!userId) {
+    const session = getUserSession();
+    if (!session) {
       router.push('/');
       return;
     }
+    setUserSession(session);
   }, [router]);
 
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
-  const currentQ = questions[currentQuestion];
-
-  const handleAnswer = (score: number) => {
+  const handleAnswer = (questionId: string, score: number) => {
     setAnswers(prev => ({
       ...prev,
-      [currentQ?.id || '']: score
+      [questionId]: score
     }));
   };
 
-  const handleNext = () => {
-    if (!answers[currentQ?.id || '']) {
-      toast.error('Bitte wähle eine Antwort aus');
-      return;
-    }
-
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      handleSubmit();
-    }
+  const canProceed = () => {
+    return answers[questions[currentQuestion].id] !== undefined;
   };
 
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
+  const calculateResults = () => {
+    let totalScore = 0;
+    const categoryScores: Record<string, number[]> = {
+      adaptability: [],
+      riskTolerance: [],
+      financialSituation: [],
+      valuesCompass: [],
+      securityNeeds: []
+    };
+
+    // Calculate scores
+    for (const [questionId, score] of Object.entries(answers)) {
+      const question = questions.find(q => q.id === questionId);
+      if (!question) continue;
+
+      totalScore += score;
+      categoryScores[question.category]?.push(score);
     }
+
+    // Calculate averages
+    const finalCategoryScores: Record<string, number> = {};
+    Object.entries(categoryScores).forEach(([category, scores]) => {
+      if (scores.length > 0) {
+        finalCategoryScores[category] = scores.reduce((a, b) => a + b, 0) / scores.length;
+      }
+    });
+
+    const resultType = getResultType(totalScore);
+    const recommendations = getRecommendations(finalCategoryScores);
+
+    return {
+      totalScore,
+      maxScore: questions.length * 5,
+      resultType,
+      categoryScores: finalCategoryScores,
+      recommendations
+    };
   };
 
   const handleSubmit = async () => {
-    const userId = sessionStorage.getItem('userId');
-    if (!userId) {
-      router.push('/');
-      return;
-    }
+    if (!userSession) return;
 
     setIsSubmitting(true);
-
+    
     try {
-      const response = await fetch('/api/quiz/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: parseInt(userId),
-          answers
-        }),
+      const results = calculateResults();
+      
+      // Save to localStorage
+      saveQuizSession({
+        userId: userSession.userId,
+        answers,
+        ...results
       });
 
-      if (!response.ok) {
-        throw new Error('Fehler beim Speichern der Antworten');
+      // Send email with results
+      const emailSuccess = await sendQuizResults({
+        name: userSession.name,
+        email: userSession.email,
+        totalScore: results.totalScore,
+        maxScore: results.maxScore,
+        resultType: results.resultType,
+        categoryScores: results.categoryScores,
+        recommendations: results.recommendations,
+        timestamp: new Date().toLocaleDateString('de-DE') + ' ' + new Date().toLocaleTimeString('de-DE')
+      });
+
+      if (emailSuccess) {
+        toast.success('Ergebnisse erfolgreich versendet!');
+      } else {
+        toast.error('E-Mail-Versand fehlgeschlagen, aber Ergebnisse gespeichert');
       }
 
-      const { resultId } = await response.json();
-      sessionStorage.setItem('resultId', resultId.toString());
-      
       router.push('/results');
     } catch (error) {
-      toast.error('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
-      console.error('Error:', error);
+      console.error('Error submitting quiz:', error);
+      toast.error('Fehler beim Speichern der Antworten');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!currentQ) {
-    return <div>Laden...</div>;
+  if (!userSession) {
+    return <div>Lädt...</div>;
   }
 
+  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const question = questions[currentQuestion];
+
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Progress */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-gray-600">
-            Frage {currentQuestion + 1} von {questions.length}
-          </span>
-          <span className="text-sm text-gray-600">
-            {Math.round(progress)}% abgeschlossen
-          </span>
-        </div>
-        <Progress value={progress} className="h-2" />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+          <CardHeader className="text-center pb-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-gray-600">
+                Frage {currentQuestion + 1} von {questions.length}
+              </span>
+              <span className="text-sm font-medium text-gray-600">
+                {Math.round(progress)}% abgeschlossen
+              </span>
+            </div>
+            <Progress value={progress} className="mb-6" />
+            <CardTitle className="text-2xl font-bold text-gray-900 leading-tight">
+              {question.text}
+            </CardTitle>
+          </CardHeader>
 
-      {/* Question Card */}
-      <Card className="bg-white shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-xl text-gray-900">
-            {currentQ.text}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {currentQ.options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => handleAnswer(option.score)}
-              className={`w-full p-4 text-left rounded-lg border transition-all hover:shadow-md ${
-                answers[currentQ.id] === option.score
-                  ? 'border-blue-500 bg-blue-50 text-blue-900'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
-              }`}
+          <CardContent className="space-y-6">
+            <RadioGroup
+              value={answers[question.id]?.toString() || ""}
+              onValueChange={(value) => handleAnswer(question.id, parseInt(value))}
+              className="space-y-4"
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  answers[currentQ.id] === option.score
-                    ? 'border-blue-500 bg-blue-500'
-                    : 'border-gray-300'
-                }`}>
-                  {answers[currentQ.id] === option.score && (
-                    <CheckCircle className="w-3 h-3 text-white" />
-                  )}
+              {[
+                { value: 1, label: "Stimme überhaupt nicht zu" },
+                { value: 2, label: "Stimme nicht zu" },
+                { value: 3, label: "Neutral" },
+                { value: 4, label: "Stimme zu" },
+                { value: 5, label: "Stimme voll und ganz zu" }
+              ].map((option) => (
+                <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <RadioGroupItem 
+                    value={option.value.toString()} 
+                    id={`${question.id}_${option.value}`}
+                    className="border-2"
+                  />
+                  <Label 
+                    htmlFor={`${question.id}_${option.value}`}
+                    className="flex-1 text-sm cursor-pointer"
+                  >
+                    {option.label}
+                  </Label>
                 </div>
-                <span className="text-sm">{option.text}</span>
-              </div>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
+              ))}
+            </RadioGroup>
 
-      {/* Navigation */}
-      <div className="flex justify-between items-center mt-8">
-        <Button
-          variant="outline"
-          onClick={handlePrevious}
-          disabled={currentQuestion === 0}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Zurück
-        </Button>
+            <div className="flex justify-between pt-6">
+              {currentQuestion > 0 ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentQuestion(prev => prev - 1)}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Zurück
+                </Button>
+              ) : (
+                <div />
+              )}
 
-        <Button
-          onClick={handleNext}
-          disabled={!answers[currentQ.id] || isSubmitting}
-          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-        >
-          {isSubmitting ? (
-            'Wird ausgewertet...'
-          ) : currentQuestion === questions.length - 1 ? (
-            <>
-              Auswertung starten
-              <CheckCircle className="w-4 h-4" />
-            </>
-          ) : (
-            <>
-              Weiter
-              <ArrowRight className="w-4 h-4" />
-            </>
-          )}
-        </Button>
+              {currentQuestion < questions.length - 1 ? (
+                <Button
+                  onClick={() => setCurrentQuestion(prev => prev + 1)}
+                  disabled={!canProceed()}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  Weiter
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!canProceed() || isSubmitting}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Wird versendet...
+                    </>
+                  ) : (
+                    'Test abschließen'
+                  )}
+                </Button>
+              )}
+            </div>
+
+            <div className="text-center pt-4">
+              <p className="text-sm text-gray-500">
+                Hallo {userSession.name}! Deine Antworten werden automatisch per E-Mail an uns gesendet.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

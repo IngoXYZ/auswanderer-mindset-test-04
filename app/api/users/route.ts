@@ -1,18 +1,16 @@
 
-
 import { NextRequest, NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
 
 export const dynamic = "force-dynamic";
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 Starting user creation API...');
+    console.log('🚀 Starting user creation API (localStorage version)...');
     
     // Parse request body
     const body = await request.json();
-    console.log('📥 Request body received:', { ...body, email: body.email ? '***@***.***' : 'missing' });
+    console.log('📥 Request body received');
     
     const { name, email } = body;
 
@@ -24,40 +22,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get Prisma client
-    console.log('🔗 Initializing database connection...');
-    const prisma = await getPrismaClient();
-    console.log('✅ Database client ready');
-
-    // Check if user already exists, if so, return existing user
-    const emailLower = email.toLowerCase().trim();
-    console.log('🔍 Checking for existing user...');
+    // Generate unique user ID
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    let user = await prisma.user.findUnique({
-      where: { email: emailLower }
-    });
+    console.log('✅ User ID generated:', userId);
 
-    if (user) {
-      console.log('👤 Existing user found:', user.id);
-    } else {
-      console.log('👤 Creating new user...');
-      user = await prisma.user.create({
-        data: {
-          name: name.trim(),
-          email: emailLower,
-        },
-      });
-      console.log('✅ New user created:', user.id);
-    }
-
-    return NextResponse.json({ userId: user.id });
+    return NextResponse.json({ userId });
   } catch (error) {
     console.error('❌ Error in user API:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
     
     return NextResponse.json(
       { error: 'Fehler beim Speichern der Benutzerdaten' },
@@ -65,4 +37,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

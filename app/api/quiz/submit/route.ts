@@ -1,7 +1,5 @@
 
-
 import { NextRequest, NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
 import { questions, categories, getResultType, getRecommendations } from '@/lib/questions';
 
 export const dynamic = "force-dynamic";
@@ -9,12 +7,13 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    const prisma = await getPrismaClient();
-    const { userId, answers } = await request.json();
+    console.log('🚀 Starting quiz submission (EmailJS version)...');
+    
+    const { userId, answers, userName, userEmail } = await request.json();
 
-    if (!userId || !answers) {
+    if (!userId || !answers || !userName || !userEmail) {
       return NextResponse.json(
-        { error: 'Benutzer-ID und Antworten sind erforderlich' },
+        { error: 'Alle Daten sind erforderlich' },
         { status: 400 }
       );
     }
@@ -28,23 +27,13 @@ export async function POST(request: NextRequest) {
       categoryScores[category] = [];
     });
 
-    // Save individual responses and calculate scores
+    // Calculate scores per category
     for (const [questionId, score] of Object.entries(answers)) {
       const question = questions.find(q => q.id === questionId);
       if (!question) continue;
 
       totalScore += Number(score);
       categoryScores[question.category]?.push(Number(score));
-
-      // Save individual response
-      await prisma.quizResponse.create({
-        data: {
-          userId: parseInt(userId),
-          questionId,
-          answer: Number(score),
-          category: question.category,
-        },
-      });
     }
 
     // Calculate average scores per category
@@ -58,24 +47,28 @@ export async function POST(request: NextRequest) {
     const resultType = getResultType(totalScore);
     const recommendations = getRecommendations(finalCategoryScores);
 
-    // Save final result
-    const result = await prisma.quizResult.create({
-      data: {
-        userId: parseInt(userId),
-        totalScore,
-        resultType,
-        categoryScores: finalCategoryScores,
-        recommendations,
-      },
-    });
+    // Create result object
+    const result = {
+      id: Date.now(),
+      userId,
+      userName,
+      userEmail,
+      totalScore,
+      maxScore: questions.length * 5, // 5 points max per question
+      resultType,
+      categoryScores: finalCategoryScores,
+      recommendations,
+      timestamp: new Date().toLocaleDateString('de-DE') + ' ' + new Date().toLocaleTimeString('de-DE')
+    };
 
-    return NextResponse.json({ resultId: result.id });
+    console.log('✅ Quiz results calculated successfully');
+
+    return NextResponse.json({ resultId: result.id, result });
   } catch (error) {
-    console.error('Error submitting quiz:', error);
+    console.error('❌ Error submitting quiz:', error);
     return NextResponse.json(
       { error: 'Fehler beim Speichern der Quiz-Antworten' },
       { status: 500 }
     );
   }
 }
-

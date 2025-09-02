@@ -1,232 +1,226 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { categories } from '@/lib/questions';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { 
   Trophy, 
   Target, 
   TrendingUp, 
-  Home,
-  CheckCircle,
-  AlertCircle,
-  XCircle
-} from 'lucide-react';
-import { toast } from 'sonner';
+  Mail,
+  RotateCcw,
+  CheckCircle
+} from "lucide-react";
+import { categories } from '@/lib/questions';
+import { getUserSession, getQuizSession, clearSession } from '@/lib/local-storage';
+import { useRouter } from 'next/navigation';
 
-interface QuizResult {
-  id: number;
+interface ResultData {
   totalScore: number;
+  maxScore: number;
   resultType: string;
   categoryScores: Record<string, number>;
   recommendations: string[];
-  user: {
-    name: string;
-    email: string;
-  };
 }
 
-export function ResultsClient() {
-  const [result, setResult] = useState<QuizResult | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function ResultsClient() {
   const router = useRouter();
+  const [result, setResult] = useState<ResultData | null>(null);
+  const [userSession, setUserSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchResult = async () => {
-      const resultId = sessionStorage.getItem('resultId');
-      if (!resultId) {
+    const loadResults = () => {
+      const user = getUserSession();
+      const quiz = getQuizSession();
+
+      if (!user || !quiz) {
         router.push('/');
         return;
       }
 
-      try {
-        const response = await fetch(`/api/results/${resultId}`);
-        if (!response.ok) {
-          throw new Error('Fehler beim Laden der Ergebnisse');
-        }
-
-        const data = await response.json();
-        setResult(data);
-      } catch (error) {
-        toast.error('Fehler beim Laden der Ergebnisse');
-        console.error('Error:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      setUserSession(user);
+      setResult({
+        totalScore: quiz.totalScore,
+        maxScore: quiz.answers ? Object.keys(quiz.answers).length * 5 : 75,
+        resultType: quiz.resultType,
+        categoryScores: quiz.categoryScores,
+        recommendations: quiz.recommendations
+      });
+      setLoading(false);
     };
 
-    fetchResult();
+    loadResults();
   }, [router]);
 
+  const handleNewTest = () => {
+    clearSession();
+    router.push('/');
+  };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Ergebnisse werden geladen...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const getResultIcon = (resultType: string) => {
-    switch (resultType) {
-      case 'bereit':
-        return <Trophy className="h-8 w-8 text-green-600" />;
-      case 'bedingt_bereit':
-        return <Target className="h-8 w-8 text-yellow-600" />;
+  if (!result || !userSession) {
+    return null;
+  }
+
+  const getScoreColor = (score: number, maxScore: number) => {
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 80) return "text-green-600";
+    if (percentage >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getResultBadgeColor = (resultType: string) => {
+    switch (resultType.toLowerCase()) {
+      case 'ausgezeichnet vorbereitet':
+        return "bg-green-100 text-green-800 border-green-200";
+      case 'gut vorbereitet':
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case 'teilweise vorbereitet':
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
-        return <Home className="h-8 w-8 text-red-600" />;
+        return "bg-red-100 text-red-800 border-red-200";
     }
   };
 
-  const getResultDetails = (resultType: string) => {
-    const details = {
-      bereit: {
-        title: 'Auswanderer-Typ: Bereit für das Abenteuer! 🌟',
-        description: 'Du bist mental und emotional gut auf eine Auswanderung vorbereitet. Du bringst die richtige Mischung aus Mut, Flexibilität und Realismus mit.',
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200'
-      },
-      bedingt_bereit: {
-        title: 'Vorsichtiger Planer: Bedingt bereit 🤔',
-        description: 'Du hast gute Grundvoraussetzungen, aber es gibt noch einige Bereiche, in denen du dich weiterentwickeln könntest, um für das Auswanderer-Leben optimal gerüstet zu sein.',
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50',
-        borderColor: 'border-yellow-200'
-      },
-      nicht_bereit: {
-        title: 'Heimatverbunden: Noch nicht bereit 🏠',
-        description: 'Momentan scheinst du noch stark an dein aktuelles Umfeld gebunden zu sein. Das ist völlig okay! Wenn der Wunsch nach Veränderung wächst, gibt es viele Wege, sich weiterzuentwickeln.',
-        color: 'text-red-600',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
-      }
-    };
-    return details[resultType as keyof typeof details];
-  };
-
-  const getCategoryIcon = (score: number) => {
-    if (score >= 4) return <CheckCircle className="h-5 w-5 text-green-600" />;
-    if (score >= 3) return <AlertCircle className="h-5 w-5 text-yellow-600" />;
-    return <XCircle className="h-5 w-5 text-red-600" />;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="max-w-4xl mx-auto text-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Deine Ergebnisse werden geladen...</p>
-      </div>
-    );
-  }
-
-  if (!result) {
-    return (
-      <div className="max-w-4xl mx-auto text-center py-20">
-        <p className="text-gray-600">Keine Ergebnisse gefunden.</p>
-        <Button onClick={() => router.push('/')} className="mt-4">
-          Zurück zum Start
-        </Button>
-      </div>
-    );
-  }
-
-  const details = getResultDetails(result.resultType);
-  const maxScore = 75; // 15 questions × 5 points max
-
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Welcome */}
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Herzlichen Glückwunsch, {result.user.name}!
-        </h2>
-        <p className="text-gray-600">Hier sind deine persönlichen Testergebnisse</p>
-      </div>
-
-      {/* Main Result */}
-      <Card className={`${details.bgColor} ${details.borderColor} border-2`}>
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            {getResultIcon(result.resultType)}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-6">
+            <CheckCircle className="w-16 h-16 text-green-600 mr-4" />
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">Test abgeschlossen!</h1>
+              <p className="text-lg text-gray-600 mt-2">
+                Hallo {userSession.name}, hier sind deine Ergebnisse
+              </p>
+            </div>
           </div>
-          <CardTitle className={`text-2xl ${details.color}`}>
-            {details.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-          <p className="text-gray-700 mb-6">{details.description}</p>
-          <div className="flex justify-center items-center gap-4">
-            <Badge variant="outline" className="text-lg px-4 py-2">
-              {result.totalScore} von {maxScore} Punkten
-            </Badge>
-            <Badge variant="outline" className="text-lg px-4 py-2">
-              {Math.round((result.totalScore / maxScore) * 100)}%
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Category Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            Detailauswertung nach Kategorien
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {Object.entries(result.categoryScores).map(([category, score]) => (
-              <div key={category} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getCategoryIcon(score)}
-                    <span className="font-medium text-gray-900">
-                      {categories[category as keyof typeof categories]}
-                    </span>
+        {/* Gesamtergebnis */}
+        <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-3">
+              <Trophy className="w-8 h-8 text-yellow-500" />
+              Dein Auswanderer-Mindset
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <div className={`text-6xl font-bold mb-4 ${getScoreColor(result.totalScore, result.maxScore)}`}>
+                {result.totalScore}
+                <span className="text-2xl text-gray-500">/{result.maxScore}</span>
+              </div>
+              <Badge className={`text-lg px-4 py-2 ${getResultBadgeColor(result.resultType)}`}>
+                {result.resultType}
+              </Badge>
+            </div>
+
+            <Progress 
+              value={(result.totalScore / result.maxScore) * 100} 
+              className="h-3"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Kategorie-Ergebnisse */}
+        <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-3">
+              <Target className="w-6 h-6 text-blue-600" />
+              Detaillierte Auswertung
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              {Object.entries(categories).map(([key, category]) => {
+                const score = result.categoryScores[key] || 0;
+                const percentage = (score / 5) * 100;
+                
+                return (
+                  <div key={key} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium text-gray-900">{category}</h3>
+                      <span className={`font-bold ${getScoreColor(score, 5)}`}>
+                        {score.toFixed(1)}/5
+                      </span>
+                    </div>
+                    <Progress value={percentage} className="h-2" />
                   </div>
-                  <Badge variant="outline">{score.toFixed(1)}/5.0</Badge>
-                </div>
-                <Progress value={(score / 5) * 100} className="h-2" />
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Empfehlungen */}
+        <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-green-600" />
+              Empfehlungen für dich
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {result.recommendations.map((recommendation, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold mt-0.5">
+                    {index + 1}
+                  </div>
+                  <p className="text-gray-700 leading-relaxed">{recommendation}</p>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        {/* E-Mail Info */}
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-green-800">
+              <Mail className="w-6 h-6" />
+              <div>
+                <h3 className="font-semibold">Ergebnisse per E-Mail versendet!</h3>
+                <p className="text-sm text-green-700 mt-1">
+                  Deine Testergebnisse wurden automatisch an uns gesendet. 
+                  Du erhältst in Kürze weitere Informationen per E-Mail.
+                </p>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Recommendations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-purple-600" />
-            Persönliche Empfehlungen
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {result.recommendations.map((recommendation, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                <p className="text-gray-700">{recommendation}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex justify-center">
-        <Button
-          onClick={() => router.push('/')}
-          className="bg-black text-white hover:bg-gray-800 flex items-center gap-2"
-        >
-          <Home className="h-4 w-4" />
-          Neuen Test starten
-        </Button>
-      </div>
-
-      <div className="text-center text-sm text-gray-500">
-        <p>Deine Ergebnisse wurden erfolgreich gespeichert und ausgewertet.</p>
-        <p className="mt-1">Vielen Dank für deine Teilnahme am The Small Reset Auswanderer-Mindset Test!</p>
+        {/* Aktionen */}
+        <div className="text-center space-y-4">
+          <Button
+            onClick={handleNewTest}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Neuen Test starten
+          </Button>
+          
+          <p className="text-sm text-gray-500">
+            Möchtest du mit einem anderen Namen einen weiteren Test machen?
+          </p>
+        </div>
       </div>
     </div>
   );
