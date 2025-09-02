@@ -44,11 +44,14 @@ export default function QuizClient() {
   const calculateResults = () => {
     let totalScore = 0;
     const categoryScores: Record<string, number[]> = {
-      adaptability: [],
-      riskTolerance: [],
-      financialSituation: [],
-      valuesCompass: [],
-      securityNeeds: []
+      veraenderungsbereitschaft: [],
+      sicherheitsbeduerfnis: [],
+      anpassungsfaehigkeit: [],
+      risikobereitschaft: [],
+      growth_vs_komfort: [],
+      konformitaet_vs_rebell: [],
+      finanzielle_situation: [],
+      wertekompass: []
     };
 
     // Calculate scores
@@ -57,7 +60,9 @@ export default function QuizClient() {
       if (!question) continue;
 
       totalScore += score;
-      categoryScores[question.category]?.push(score);
+      if (categoryScores[question.category]) {
+        categoryScores[question.category].push(score);
+      }
     }
 
     // Calculate averages
@@ -154,24 +159,18 @@ export default function QuizClient() {
               onValueChange={(value) => handleAnswer(question.id, parseInt(value))}
               className="space-y-4"
             >
-              {[
-                { value: 1, label: "Stimme überhaupt nicht zu" },
-                { value: 2, label: "Stimme nicht zu" },
-                { value: 3, label: "Neutral" },
-                { value: 4, label: "Stimme zu" },
-                { value: 5, label: "Stimme voll und ganz zu" }
-              ].map((option) => (
-                <div key={option.value} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+              {question.options.map((option) => (
+                <div key={option.score} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                   <RadioGroupItem 
-                    value={option.value.toString()} 
-                    id={`${question.id}_${option.value}`}
+                    value={option.score.toString()} 
+                    id={`${question.id}_${option.score}`}
                     className="border-2"
                   />
                   <Label 
-                    htmlFor={`${question.id}_${option.value}`}
-                    className="flex-1 text-sm cursor-pointer"
+                    htmlFor={`${question.id}_${option.score}`}
+                    className="flex-1 text-sm cursor-pointer leading-relaxed"
                   >
-                    {option.label}
+                    {option.text}
                   </Label>
                 </div>
               ))}

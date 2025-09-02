@@ -219,25 +219,32 @@ export const questions: Question[] = [
 ];
 
 export const getResultType = (totalScore: number): string => {
-  if (totalScore >= 60) return 'bereit';
-  if (totalScore >= 40) return 'bedingt_bereit';
-  return 'nicht_bereit';
+  // Total possible score: 15 questions * 5 points = 75 points
+  if (totalScore >= 60) return 'Ausgezeichnet vorbereitet';
+  if (totalScore >= 45) return 'Gut vorbereitet';
+  if (totalScore >= 30) return 'Teilweise vorbereitet';
+  return 'Noch nicht bereit';
 };
 
 export const getResultDetails = (resultType: string) => {
   const results = {
-    bereit: {
-      title: 'Auswanderer-Typ: Bereit für das Abenteuer! 🌟',
-      description: 'Du bist mental und emotional gut auf eine Auswanderung vorbereitet. Du bringst die richtige Mischung aus Mut, Flexibilität und Realismus mit.',
+    'Ausgezeichnet vorbereitet': {
+      title: 'Ausgezeichnet vorbereitet! 🌟',
+      description: 'Du bist mental und emotional hervorragend auf eine Auswanderung vorbereitet. Du bringst die perfekte Mischung aus Mut, Flexibilität und Realismus mit.',
       color: 'text-green-600'
     },
-    bedingt_bereit: {
-      title: 'Vorsichtiger Planer: Bedingt bereit 🤔',
-      description: 'Du hast gute Grundvoraussetzungen, aber es gibt noch einige Bereiche, in denen du dich weiterentwickeln könntest, um für das Auswanderer-Leben optimal gerüstet zu sein.',
+    'Gut vorbereitet': {
+      title: 'Gut vorbereitet! 🚀',
+      description: 'Du hast sehr gute Grundvoraussetzungen für eine Auswanderung. Mit ein wenig zusätzlicher Vorbereitung bist du bereit für das Abenteuer.',
+      color: 'text-blue-600'
+    },
+    'Teilweise vorbereitet': {
+      title: 'Teilweise vorbereitet 🤔',
+      description: 'Du hast eine solide Basis, aber es gibt noch einige Bereiche, in denen du dich weiterentwickeln könntest, um optimal für das Auswanderer-Leben gerüstet zu sein.',
       color: 'text-yellow-600'
     },
-    nicht_bereit: {
-      title: 'Heimatverbunden: Noch nicht bereit 🏠',
+    'Noch nicht bereit': {
+      title: 'Noch nicht bereit 🏠',
       description: 'Momentan scheinst du noch stark an dein aktuelles Umfeld gebunden zu sein. Das ist völlig okay! Wenn der Wunsch nach Veränderung wächst, gibt es viele Wege, sich weiterzuentwickeln.',
       color: 'text-red-600'
     }
@@ -249,38 +256,55 @@ export const getRecommendations = (categoryScores: Record<string, number>): stri
   const recommendations: string[] = [];
   
   Object.entries(categoryScores).forEach(([category, score]) => {
-    if (score < 3) {
+    if (score < 3.5) {
       switch (category) {
         case 'veraenderungsbereitschaft':
-          recommendations.push('🔄 Übe dich in kleinen Veränderungen: Nimm bewusst neue Wege zur Arbeit, probiere neue Hobbys aus oder verändere deine Routine schrittweise.');
+          recommendations.push('🔄 Stärke deine Veränderungsbereitschaft: Übe dich in kleinen Veränderungen - nimm bewusst neue Wege zur Arbeit, probiere neue Hobbys aus oder verändere deine Routine schrittweise.');
           break;
         case 'sicherheitsbeduerfnis':
-          recommendations.push('🎯 Arbeite an deiner Risikoakzeptanz: Beginne mit kleinen, kontrollierten Risiken und baue Vertrauen in deine Anpassungsfähigkeit auf.');
+          recommendations.push('🎯 Arbeite an deiner Risikoakzeptanz: Beginne mit kleinen, kontrollierten Risiken und baue Vertrauen in deine Anpassungsfähigkeit auf. Sicherheit ist wichtig, aber übermäßige Vorsicht kann Chancen verhindern.');
           break;
         case 'anpassungsfaehigkeit':
-          recommendations.push('🌍 Erweitere deinen kulturellen Horizont: Reise mehr, lerne Sprachen, tausche dich mit Menschen aus anderen Kulturen aus.');
+          recommendations.push('🌍 Verbessere deine Anpassungsfähigkeit: Erweitere deinen kulturellen Horizont durch Reisen, lerne Sprachen und tausche dich mit Menschen aus anderen Kulturen aus.');
           break;
         case 'risikobereitschaft':
-          recommendations.push('💪 Stärke dein Selbstvertrauen: Setze dir kleine Ziele außerhalb deiner Komfortzone und feiere deine Erfolge.');
+          recommendations.push('💪 Erhöhe deine Risikobereitschaft: Stärke dein Selbstvertrauen, indem du dir kleine Ziele außerhalb deiner Komfortzone setzt und deine Erfolge feierst.');
           break;
         case 'growth_vs_komfort':
-          recommendations.push('📚 Entwickle ein Growth Mindset: Sieh Herausforderungen als Wachstumschancen und investiere bewusst in deine persönliche Entwicklung.');
+          recommendations.push('📚 Entwickle ein Growth Mindset: Sieh Herausforderungen als Wachstumschancen und investiere bewusst in deine persönliche Entwicklung statt nur nach Komfort zu streben.');
           break;
         case 'konformitaet_vs_rebell':
-          recommendations.push('🦋 Stärke deine Unabhängigkeit: Übe dich darin, eigene Entscheidungen zu treffen und zu deinen Werten zu stehen.');
+          recommendations.push('🦋 Stärke deine Unabhängigkeit: Übe dich darin, eigene Entscheidungen zu treffen und zu deinen Werten zu stehen, auch wenn andere nicht zustimmen.');
           break;
         case 'finanzielle_situation':
-          recommendations.push('💰 Verbessere deine finanzielle Basis: Erstelle einen Sparplan, reduziere Ausgaben und baue systematisch Rücklagen auf.');
+          recommendations.push('💰 Verbessere deine finanzielle Basis: Erstelle einen konkreten Sparplan, reduziere unnötige Ausgaben und baue systematisch Rücklagen für eine Auswanderung auf.');
           break;
         case 'wertekompass':
-          recommendations.push('🧭 Reflektiere deine Werte: Überlege dir, was dir wirklich wichtig ist und wie eine Auswanderung diese Werte unterstützen könnte.');
+          recommendations.push('🧭 Reflektiere deine Werte: Überlege dir genau, was dir im Leben wirklich wichtig ist und wie eine Auswanderung diese Werte unterstützen oder herausfordern könnte.');
+          break;
+      }
+    }
+  });
+  
+  // Add positive recommendations for high scores
+  Object.entries(categoryScores).forEach(([category, score]) => {
+    if (score >= 4.5) {
+      switch (category) {
+        case 'veraenderungsbereitschaft':
+          recommendations.push('✅ Deine Veränderungsbereitschaft ist ausgezeichnet - nutze diese Stärke als Fundament für deine Auswanderungspläne!');
+          break;
+        case 'risikobereitschaft':
+          recommendations.push('🚀 Deine Risikobereitschaft ist hervorragend - du bist bereit, kalkulierte Chancen zu ergreifen!');
+          break;
+        case 'anpassungsfaehigkeit':
+          recommendations.push('🌟 Deine Anpassungsfähigkeit ist ausgezeichnet - du wirst dich schnell in neue Umgebungen einfinden!');
           break;
       }
     }
   });
   
   if (recommendations.length === 0) {
-    recommendations.push('🎉 Du bist bereits sehr gut aufgestellt! Nutze deine Stärken und vertraue auf deine Fähigkeiten.');
+    recommendations.push('🎉 Du bist bereits sehr gut aufgestellt! Nutze deine ausgewogenen Fähigkeiten und vertraue auf deine Stärken für deine Auswanderungspläne.');
   }
   
   return recommendations;
