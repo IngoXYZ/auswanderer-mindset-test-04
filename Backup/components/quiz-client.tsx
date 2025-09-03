@@ -135,11 +135,11 @@ export default function QuizClient() {
   const question = questions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
-          <CardHeader className="text-center pb-3">
-            <div className="flex items-center justify-between mb-3">
+          <CardHeader className="text-center pb-4">
+            <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-gray-600">
                 Frage {currentQuestion + 1} von {questions.length}
               </span>
@@ -147,28 +147,28 @@ export default function QuizClient() {
                 {Math.round(progress)}% abgeschlossen
               </span>
             </div>
-            <Progress value={progress} className="mb-4" />
-            <CardTitle className="text-xl font-bold text-gray-900 leading-tight">
+            <Progress value={progress} className="mb-6" />
+            <CardTitle className="text-2xl font-bold text-gray-900 leading-tight">
               {question.text}
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <RadioGroup
               value={answers[question.id]?.toString() || ""}
               onValueChange={(value) => handleAnswer(question.id, parseInt(value))}
-              className="space-y-2"
+              className="space-y-4"
             >
               {question.options.map((option) => (
-                <div key={option.score} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={option.score} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                   <RadioGroupItem 
                     value={option.score.toString()} 
                     id={`${question.id}_${option.score}`}
-                    className="border-2 mt-0.5"
+                    className="border-2"
                   />
                   <Label 
                     htmlFor={`${question.id}_${option.score}`}
-                    className="flex-1 text-sm cursor-pointer leading-snug"
+                    className="flex-1 text-sm cursor-pointer leading-relaxed"
                   >
                     {option.text}
                   </Label>
@@ -176,7 +176,7 @@ export default function QuizClient() {
               ))}
             </RadioGroup>
 
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-between pt-6">
               {currentQuestion > 0 ? (
                 <Button
                   variant="outline"
@@ -217,7 +217,7 @@ export default function QuizClient() {
               )}
             </div>
 
-            <div className="text-center pt-2">
+            <div className="text-center pt-4">
               <p className="text-sm text-gray-500">
                 Hallo {userSession.name}! Deine Antworten werden automatisch per E-Mail an uns gesendet.
               </p>
